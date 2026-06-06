@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groups - Carlos Promoter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="logo">🎯 Carlos Promoter</div>
+        <nav>
+            <a href="/">Dashboard</a>
+            <a href="/accounts">Accounts</a>
+            <a href="/history">History</a>
+        </nav>
+    </header>
+    <div class="container">
+        <div class="card">
+            <div class="card-title">👥 Select Groups for {{ account.first_name or account.phone_number }}</div>
+            <div class="alert alert-info">
+                Select groups where you want to send messages. Click the button below to load groups from Telegram.
+            </div>
+            <button class="btn btn-primary btn-block" id="loadGroupsBtn" onclick="loadGroups()">🔄 Load Groups from Telegram</button>
+            <div id="loadingIndicator" style="display: none; text-align: center; margin: 2rem 0;">
+                <span class="loading"></span>
+                <p>Loading groups...</p>
+            </div>
+            <div id="groupsList" style="display: none; margin-top: 2rem;">
+                <div style="margin-bottom: 1rem;">
+                    <button class="btn btn-secondary" onclick="selectAllGroups()">✓ Select All</button>
+                    <button class="btn btn-secondary" onclick="deselectAllGroups()">✗ Deselect All</button>
+                </div>
+                <div class="checkbox-group" id="groupsCheckboxes"></div>
+                <div style="margin-top: 2rem;">
+                    <button class="btn btn-primary btn-block" onclick="saveGroups()">💾 Save Selected Groups</button>
+                    <a href="/broadcast/{{ account.id }}" class="btn btn-success btn-block">➜ Continue to Message</a>
+                    <a href="/accounts" class="btn btn-secondary btn-block">← Back to Accounts</a>
+                </div>
+            </div>
+            <div id="alertsContainer"></div>
+        </div>
+    </div>
+    <script>
+        let allGroups = [];
+        async function loadGroups() {
+            const loadBtn = document.getElementById('loadGroupsBtn');
+            loadBtn.disabled = true;
+            loadBtn.innerHTML = '<span class="loading"></span> Loading...';
+            document.getElementById('loadingIndicator').style.display = 'block';
+            try {
+                const response = await fetch('/api/get-groups/{{ account.id }}');
+                const data = await response.json();
+                if (data.status === 'success') {
+                    allGroups = data.groups;
+                    displayGroups(allGroups);
+                    document.getElementById('groupsList').style.display = 'block';
+                    showAlert(`✓ Loaded ${allGroups.length} groups`, 'success');
+                } else {
+                    showAlert('✗ Error: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('✗ Error: ' + error.message, 'error');
+            } finally {
+                loadBtn.disabled = false;
+                loadBtn.innerHTML = '🔄 Load Groups from Telegram';
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }
+        }
+        function displayGroups(groups) {
+            const container = document.getElementById('groupsCheckboxes');
+            container.innerHTML = '';
+            groups.forEach(group => {
+                const item = document.createElement('div');
+                item.className = 'checkbox-item';
+                item.innerHTML = `
+                    <input type="checkbox" id="group_${group.id}" value="${group.id}">
+                    <label for="group_${group.id}">
+                        <strong>${group.name}</strong>
+                        ${group.username ? '<br><small>@' + group.username + '</small>' : ''}
+                        <br><small>${group.participants_count} members</small>
+                    </label>
+                `;
+                container.appendChild(item);
+            });
+        }
+        function selectAllGroups() {
+            document.querySelectorAll('#groupsCheckboxes input[type="checkbox"]').forEach(cb => {
+                cb.checked = true;
+            });
+            showAlert('✓ All groups selected', 'success');
+        }
+        function deselectAllGroups() {
+            document.querySelectorAll('#groupsCheckboxes input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+            showAlert('✓ All groups deselected', 'success');
+        }
+        async function saveGroups() {
+            const selectedGroups = Array.from(
+                document.querySelectorAll('#groupsCheckboxes input[type="checkbox"]:checked')
+            ).map(cb => cb.value);
+            if (selectedGroups.length === 0) {
+                showAlert('✗ Please select at least one group', 'error');
+                return;
+            }
+            try {
+                const response = await fetch('/api/save-groups', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        account_id: {{ account.id }},
+                        selected_groups: selectedGroups
+                    })
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showAlert(`✓ ${selectedGroups.length} groups saved successfully`, 'success');
+                    setTimeout(() => {
+                        window.location.href = '/broadcast/{{ account.id }}';
+                    }, 1500);
+                } else {
+                    showAlert('✗ Error: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('✗ Error: ' + error.message, 'error');
+            }
+        }
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            document.getElementById('alertsContainer').innerHTML = '';
+            document.getElementById('alertsContainer').appendChild(alertDiv);
+            setTimeout(() => alertDiv.remove(), 4000);
+        }
+        window.addEventListener('load', () => {
+            const groupsList = document.getElementById('groupsList');
+            if ({{ groups|length }} > 0) {
+                groupsList.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

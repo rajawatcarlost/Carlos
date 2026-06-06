@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Account - Carlos Promoter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="logo">🎯 Carlos Promoter</div>
+        <nav>
+            <a href="/">Dashboard</a>
+            <a href="/accounts" class="active">Accounts</a>
+            <a href="/history">History</a>
+        </nav>
+    </header>
+    <div class="container">
+        <div class="card" style="max-width: 600px; margin: 3rem auto;">
+            <div class="card-title">➕ Add New Telegram Account</div>
+            <div id="step1" style="display: block;">
+                <div class="form-group">
+                    <label for="phone">Phone Number (with country code)</label>
+                    <input type="text" id="phone" placeholder="+1234567890" required>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="startLogin()">Request Code</button>
+            </div>
+            <div id="step2" style="display: none;">
+                <div class="alert alert-info">
+                    <strong>Code Sent!</strong> Check your Telegram app for the verification code.
+                </div>
+                <div class="form-group">
+                    <label for="code">Verification Code</label>
+                    <input type="text" id="code" placeholder="12345" maxlength="5">
+                </div>
+                <button class="btn btn-primary btn-block" onclick="verifyCode()">Verify Code</button>
+                <button class="btn btn-secondary btn-block" onclick="goBackStep1()">Back</button>
+            </div>
+            <div id="step3" style="display: none;">
+                <div class="alert alert-info">
+                    <strong>2FA Password Required!</strong> Enter your account password.
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password">
+                </div>
+                <button class="btn btn-primary btn-block" onclick="verifyPassword()">Verify Password</button>
+                <button class="btn btn-secondary btn-block" onclick="goBackStep1()">Back</button>
+            </div>
+            <div id="alerts" style="margin-top: 1rem;"></div>
+        </div>
+    </div>
+    <script>
+        async function startLogin() {
+            const phone = document.getElementById('phone').value.trim();
+            if (!phone) {
+                showAlert('Please enter your phone number', 'error');
+                return;
+            }
+            try {
+                const response = await fetch('/api/start-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone_number: phone })
+                });
+                const data = await response.json();
+                if (data.status === 'code_requested') {
+                    showAlert('✓ Code sent to ' + phone, 'success');
+                    document.getElementById('step1').style.display = 'none';
+                    document.getElementById('step2').style.display = 'block';
+                } else {
+                    showAlert('✗ Error: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('✗ Error: ' + error.message, 'error');
+            }
+        }
+        async function verifyCode() {
+            const code = document.getElementById('code').value.trim();
+            if (!code) {
+                showAlert('Please enter the verification code', 'error');
+                return;
+            }
+            try {
+                const response = await fetch('/api/verify-login-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showAlert('✓ Account added successfully! Redirecting...', 'success');
+                    setTimeout(() => window.location.href = '/accounts', 1500);
+                } else if (data.status === 'password_needed') {
+                    showAlert('📌 2FA password required', 'info');
+                    document.getElementById('step2').style.display = 'none';
+                    document.getElementById('step3').style.display = 'block';
+                } else {
+                    showAlert('✗ Error: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('✗ Error: ' + error.message, 'error');
+            }
+        }
+        async function verifyPassword() {
+            const password = document.getElementById('password').value;
+            if (!password) {
+                showAlert('Please enter your password', 'error');
+                return;
+            }
+            try {
+                const response = await fetch('/api/verify-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showAlert('✓ Account added successfully! Redirecting...', 'success');
+                    setTimeout(() => window.location.href = '/accounts', 1500);
+                } else {
+                    showAlert('✗ Error: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('✗ Error: ' + error.message, 'error');
+            }
+        }
+        function goBackStep1() {
+            document.getElementById('step1').style.display = 'block';
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('step3').style.display = 'none';
+            document.getElementById('phone').value = '';
+            document.getElementById('code').value = '';
+            document.getElementById('password').value = '';
+        }
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            document.getElementById('alerts').innerHTML = '';
+            document.getElementById('alerts').appendChild(alertDiv);
+            setTimeout(() => alertDiv.remove(), 4000);
+        }
+    </script>
+</body>
+</html>

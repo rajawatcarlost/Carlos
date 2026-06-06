@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Carlos Promoter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="logo">🎯 Carlos Promoter</div>
+        <nav>
+            <a href="/" class="active">Dashboard</a>
+            <a href="/accounts">Accounts</a>
+            <a href="/history">History</a>
+        </nav>
+    </header>
+    <div class="container">
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-number">{{ stats.total_accounts }}</div>
+                <div class="stat-label">Active Accounts</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">{{ stats.total_groups }}</div>
+                <div class="stat-label">Total Groups</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">{{ stats.total_broadcasts }}</div>
+                <div class="stat-label">Broadcast Jobs</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">📱 Your Accounts</div>
+            {% if accounts %}
+                <div id="accountsList">
+                    {% for account in accounts %}
+                        <div class="account-card">
+                            <div class="account-header">
+                                <div>
+                                    <div class="account-name">{{ account.first_name or account.phone_number }}</div>
+                                    <div class="account-info">+{{ account.phone_number }}</div>
+                                </div>
+                                <div class="account-badge">✓ Active</div>
+                            </div>
+                            <div class="account-actions">
+                                <a href="/groups/{{ account.id }}" class="btn btn-secondary btn-small">Manage Groups</a>
+                                <a href="/broadcast/{{ account.id }}" class="btn btn-primary btn-small">Send Message</a>
+                                <button class="btn btn-danger btn-small" onclick="deleteAccount({{ account.id }})">Delete</button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    No accounts added yet. <a href="/add-account" style="color: var(--primary-red); text-decoration: underline;">Add your first account</a>
+                </div>
+            {% endif %}
+            <div style="margin-top: 2rem;">
+                <a href="/add-account" class="btn btn-primary btn-block">+ Add New Account</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        async function deleteAccount(accountId) {
+            if (!confirm('Are you sure you want to delete this account? This action cannot be undone.')) {
+                return;
+            }
+            try {
+                const response = await fetch(`/api/delete-account/${accountId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    alert('✓ Account deleted successfully');
+                    location.reload();
+                } else {
+                    alert('✗ Error: ' + data.message);
+                }
+            } catch (error) {
+                alert('✗ Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

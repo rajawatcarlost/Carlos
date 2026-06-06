@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounts - Carlos Promoter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="logo">🎯 Carlos Promoter</div>
+        <nav>
+            <a href="/">Dashboard</a>
+            <a href="/accounts" class="active">Accounts</a>
+            <a href="/history">History</a>
+        </nav>
+    </header>
+    <div class="container">
+        <div class="card">
+            <div class="card-title">📱 All Accounts</div>
+            {% if accounts %}
+                <div>
+                    {% for account in accounts %}
+                        <div class="account-card">
+                            <div class="account-header">
+                                <div>
+                                    <div class="account-name">{{ account.first_name or account.phone_number }}</div>
+                                    <div class="account-info">📞 +{{ account.phone_number }}</div>
+                                    {% if account.username %}
+                                        <div class="account-info">👤 @{{ account.username }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="account-badge">✓ Active</div>
+                            </div>
+                            <div class="account-actions">
+                                <a href="/groups/{{ account.id }}" class="btn btn-primary btn-small">Select Groups</a>
+                                <a href="/broadcast/{{ account.id }}" class="btn btn-success btn-small">Send Message</a>
+                                <button class="btn btn-danger btn-small" onclick="deleteAccount({{ account.id }})">Delete</button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    No accounts added yet. Click below to add your first account.
+                </div>
+            {% endif %}
+            <div style="margin-top: 2rem;">
+                <a href="/add-account" class="btn btn-primary btn-block">+ Add New Account</a>
+                <a href="/" class="btn btn-secondary btn-block">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        async function deleteAccount(accountId) {
+            if (!confirm('Delete this account? This cannot be undone.')) return;
+            try {
+                const response = await fetch(`/api/delete-account/${accountId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    alert('✓ Account deleted');
+                    location.reload();
+                } else {
+                    alert('✗ Error: ' + data.message);
+                }
+            } catch (error) {
+                alert('✗ Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
