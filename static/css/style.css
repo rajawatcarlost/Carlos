@@ -26,7 +26,6 @@ body {
     min-height: 100vh;
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -45,7 +44,6 @@ body {
     background: #ff5a7e;
 }
 
-/* Header */
 header {
     background: linear-gradient(90deg, var(--card-bg) 0%, rgba(230, 57, 70, 0.1) 100%);
     border-bottom: 2px solid var(--primary-red);
@@ -86,14 +84,12 @@ nav a.active {
     text-shadow: 0 0 10px rgba(230, 57, 70, 0.5);
 }
 
-/* Container */
 .container {
     max-width: 1200px;
     margin: 2rem auto;
     padding: 0 1rem;
 }
 
-/* Cards */
 .card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
@@ -119,7 +115,6 @@ nav a.active {
     padding-bottom: 1rem;
 }
 
-/* Forms */
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -165,7 +160,6 @@ textarea {
     font-family: 'Courier New', monospace;
 }
 
-/* Buttons */
 .btn {
     padding: 0.75rem 1.5rem;
     border: none;
@@ -230,7 +224,6 @@ textarea {
     font-size: 0.9rem;
 }
 
-/* Grid */
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -241,7 +234,6 @@ textarea {
     grid-template-columns: repeat(2, 1fr);
 }
 
-/* Stats */
 .stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -268,7 +260,6 @@ textarea {
     margin-top: 0.5rem;
 }
 
-/* Account Cards */
 .account-card {
     background: var(--card-bg);
     border: 2px solid var(--border-color);
@@ -316,7 +307,6 @@ textarea {
     gap: 0.5rem;
 }
 
-/* Checkbox */
 .checkbox-group {
     margin-bottom: 1.5rem;
 }
@@ -351,7 +341,6 @@ textarea {
     flex: 1;
 }
 
-/* Alert */
 .alert {
     padding: 1rem 1.5rem;
     border-radius: 8px;
@@ -383,7 +372,6 @@ textarea {
     color: #3498db;
 }
 
-/* Loading */
 .loading {
     display: inline-block;
     width: 20px;
@@ -409,7 +397,6 @@ textarea {
     }
 }
 
-/* Table */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -434,7 +421,6 @@ tr:hover {
     background: rgba(230, 57, 70, 0.05);
 }
 
-/* Modal */
 .modal {
     display: none;
     position: fixed;
@@ -495,7 +481,6 @@ tr:hover {
     to { opacity: 1; }
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     header {
         flex-direction: column;

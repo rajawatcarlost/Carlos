@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broadcast - Carlos Promoter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="logo">🎯 Carlos Promoter</div>
+        <nav>
+            <a href="/">Dashboard</a>
+            <a href="/accounts">Accounts</a>
+            <a href="/history">History</a>
+        </nav>
+    </header>
+    <div class="container">
+        <div class="card">
+            <div class="card-title">📤 Broadcast Message - {{ account.first_name or account.phone_number }}</div>
+            <div class="alert alert-info"><strong>📊 Groups Selected:</strong> {{ groups|length }} group(s) ready to receive messages</div>
+            <form id="broadcastForm">
+                <div class="form-group">
+                    <label for="message">Message Content</label>
+                    <textarea id="message" name="message" placeholder="Enter your message here..." required></textarea>
+                    <small style="color: var(--text-lighter);">Your message will be sent to all {{ groups|length }} selected groups</small>
+                </div>
+                <div class="form-group">
+                    <label for="delay">Delay Between Messages (seconds)</label>
+                    <input type="number" id="delay" name="delay" value="2" min="1" max="60">
+                    <small style="color: var(--text-lighter);">Default: 2 seconds (prevents Telegram spam detection)</small>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="autoRepeat" name="autoRepeat">
+                        <span style="color: var(--text-light);">Enable Auto-Repeat</span>
+                    </label>
+                    <small style="color: var(--text-lighter);">Message will automatically resend after the interval</small>
+                </div>
+                <div class="form-group" id="repeatIntervalGroup" style="display: none;">
+                    <label for="repeatInterval">Repeat Every (seconds)</label>
+                    <input type="number" id="repeatInterval" name="repeatInterval" value="3600" min="60" max="86400">
+                    <small style="color: var(--text-lighter);">Default: 1 hour (3600 seconds)</small>
+                </div>
+                <div id="alertsContainer"></div>
+                <button type="submit" class="btn btn-primary btn-block">🚀 Send to All Groups</button>
+                <a href="/groups/{{ account.id }}" class="btn btn-secondary btn-block">← Back to Groups</a>
+            </form>
+        </div>
+    </div>
+    <script>
+        document.getElementById('autoRepeat').addEventListener('change', (e) => {
+            document.getElementById('repeatIntervalGroup').style.display = e.target.checked ? 'block' : 'none';
+        });
+        document.getElementById('broadcastForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = document.getElementById('message').value.trim();
+            const delay = parseInt(document.getElementById('delay').value);
+            const autoRepeat = document.getElementById('autoRepeat').checked;
+            const repeatInterval = parseInt(document.getElementById('repeatInterval').value);
+            if (!message) {
+                showAlert('Please enter a message', 'error');
+                return;
+            }
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span> Sending...';
+            try {
+                const response = await fetch('/api/send-broadcast', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        account_id: {{ account.id }},
+                        message,
+                        delay,
+                        auto_repeat: autoRepeat,
+                        repeat_interval: repeatInterval
+                    })
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showAlert(`✓ ${data.results.successful} messages sent successfully!`, 'success');
+                    setTimeout(() => window.location.href = '/history', 1500);
+                } else {
+                    showAlert('✗ Error: ' + data.message, 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '🚀 Send to All Groups';
+                }
+            } catch (error) {
+                showAlert('✗ Error: ' + error.message, 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '🚀 Send to All Groups';
+            }
+        });
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            document.getElementById('alertsContainer').innerHTML = '';
+            document.getElementById('alertsContainer').appendChild(alertDiv);
+            if (type !== 'error') setTimeout(() => alertDiv.remove(), 3000);
+        }
+    </script>
+</body>
+</html>
